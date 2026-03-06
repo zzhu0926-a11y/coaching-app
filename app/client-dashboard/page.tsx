@@ -108,15 +108,14 @@ export default async function ClientDashboardPage() {
       .order('date', { ascending: false }),
     supabase
       .from('plans')
-      .select('workout_plan, nutrition_plan, created_at')
+      .select('type, content, created_at')
       .eq('client_id', user.id)
-      .eq('active', true)
-      .single(),
+      .eq('active', true),
     supabase
       .from('feedback')
       .select('id')
       .eq('client_id', user.id)
-      .eq('read_by_client', false),
+      .is('sent_at', null),
   ])
 
   const profile = profileRes.data
@@ -124,7 +123,8 @@ export default async function ClientDashboardPage() {
 
   const goals = goalsRes.data
   const latestCycle = cycleRes.data?.[0] ?? null
-  const plan = plansRes.data
+  const plans = plansRes.data ?? []
+  const workoutPlan = plans.find((p: any) => p.type === 'workout')
   const unreadFeedback = feedbackRes.data?.length ?? 0
 
   // Current cycle phase
@@ -285,10 +285,10 @@ export default async function ClientDashboardPage() {
               View full plan →
             </Link>
           </div>
-          {plan ? (
+          {workoutPlan ? (
             <p className="text-zinc-300 text-sm line-clamp-3 whitespace-pre-line">
-              {plan.workout_plan?.slice(0, 200) ?? 'Workout plan loading…'}
-              {(plan.workout_plan?.length ?? 0) > 200 && '…'}
+              {workoutPlan.content?.slice(0, 200) ?? ''}
+              {(workoutPlan.content?.length ?? 0) > 200 && '…'}
             </p>
           ) : (
             <p className="text-zinc-600 text-sm">Your coach hasn&apos;t set a plan yet.</p>
